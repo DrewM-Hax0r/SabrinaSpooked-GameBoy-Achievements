@@ -1,0 +1,270 @@
+// Sabrina: The Animated Series - Spooked!
+// #ID = 3636
+
+// $00C381: [8-bit] Debug Menu Flag
+//          This flag is used with the Debug Menu to determine where to load into when the player chooses an option. It can also identify when the player is in the Debug Menu itself.
+//          
+//          0x63 = Debug Menu
+function DebugMenuFlag() => byte(0x00C381)
+
+// $00CA14: [16-bit BE] Pointer to active character being controlled
+//          Offset +0x3FB1
+function ActiveControllerCharacterPointer() => word_be(0x00CA14)
+
+// $00CA94: [8-bit] In-Game Flag
+//          Can be used to check if the game is in an in-game state where the player has control of a character.
+//
+//          0x00 = In Menus, Level Transition Screen, Password Display Screen, etc.
+//          0x01 = In-Game
+function InGameFlag() => byte(0x00CA94)
+
+// $00CA6E: [8-bit] Number of lives
+function NumberOfLives() => byte(0x00CA6E)
+
+// $00CA6F: [8-bit] Number of hearts
+//          Max of 0x03
+//          Value can be 0x00 - a life is lost when a hit is taken when this value is 0
+function NumberOfHearts() => byte(0x00CA6F)
+
+// $00CA70: [8-bit] Number of crystals collected in current level
+//          Max of 0x03
+//          When this value reaches 0x03, the exit portal for the level appears
+function CurrentCrystalCount() => byte(0x00CA70)
+
+// $00CA71: [8-bit] Number of power stars collected in current level
+//          Max of 0x03
+//          When this value reaches 0x03, Sabrina can use her ranged zap attack
+function CurrentPowerStarCount() => byte(0x00CA71)
+
+// $00CAA3: [8-bit] Character Control Flag
+//          Can be used to check which character is activly being controlled by the player.
+//
+//          0x00 = Sabrina
+//          0x01 = Salem
+function CharacterControlFlag() => byte(0x00CAA3)
+
+// $00CAF1: [8-bit] Level ID
+//          Keeps track of which level us currently loaded. The game uses this value to determine which level to load next when certain events happen that cause a level load to occur. The value will increment to the next level when the password screen is shown, displaying the password for the next level.
+//          
+//          0x00 = Title Screens, Debug Menu, etc.
+//          0x01 = Opening Cutscene / Level 1-1
+//          0x02 = Level 1-2
+//          0x03 = Level 1-3
+//          0x04 = Level 1-4
+//          0x05 = Level 2-1
+//          0x06 = Level 2-2
+//          0x07 = Level 2-3
+//          0x08 = Level 2-4
+//          0x09 = Level 3-1
+//          0x0A = Level 3-2
+//          0x0B = Level 3-3
+//          0x0C = Level 3-4
+//          0x0D = Level 4-1
+//          0x0E = Level 4-2
+//          0x0F = Level 4-3
+//          0x10 = Level 4-4
+//          0x15 = Debug Test Level
+//          0x19 = W1 Boss Fight
+//          0x1A = W2 Boss Fight
+//          0x1B = W3 Boss Fight
+//          0x1C = W4 Boss Fight
+function LevelId() => byte(0x00CAF1)
+
+// $00CB03: [8-bit] Stomp Spell Collected Flag
+//          0x00 = Spell not aquired
+//          0x80 = Spell aquired
+function StompSpellCollectedFlag() => byte(0x00CB03)
+
+// $00CB04: [8-bit] Tornado Spell Collected Flag
+//          0x00 = Spell not aquired
+//          0x80 = Spell aquired
+function TornadoSpellCollectedFlag() => byte(0x00CB04)
+
+// $00CB05: [8-bit] Shrink Spell Collected Flag
+//          0x00 = Spell not aquired
+//          0x80 = Spell aquired
+function ShrinkSpellCollectedFlag() => byte(0x00CB05)
+
+// $00CB06: [8-bit] Bubble Spell Collected Flag
+//          0x00 = Spell not aquired
+//          0x80 = Spell aquired
+function BubbleSpellCollectedFlag() => byte(0x00CB06)
+
+// $011000: [8-bit] Entity 1 Active Status
+//          This first entity is always Sabrina.
+//          
+//          This address is the start of the entity address space. Starting from here, adding 0x7B to this address will bring you to the start of the next entity address space. Continuously adding 0x7B will bring you to the start of each available entity address space.
+//          
+//          The following offsets correspond to various properties for the entity when applied to the active status address:
+//          +0x1B = Entity State (16-bit BE)
+//          +0x27 = Entity Clear Bit (8-bit)
+//          +0x2E = Entity ID (8-bit) ???
+//          +0x2F = Sprite Index (16-bit BE)
+//          +0x34 = X Position (16-bit)
+//          +0x37 = Y Position (16-bit)
+//          +0x63 = Enemy HP (8-bit)
+function Entity1ActiveStatus() => byte(0x011000)
+
+// $01101B: [16-bit BE] Sabrina State
+//          Changes value depending on what action Sabrina is currently taking.
+//          
+//          0xA00C = Entering Portal
+//          0x6B4B = Shink Spell Standing
+//          0xCC4D = Shink Spell Walking
+//          0xD74F = Shink Spell Jumping
+//          0xFF51 = Shink Spell Landing
+//          0x4F = Controlling Salem
+//          0x2950 = Standing Idle
+//          0xF552 = Walking/Running
+//          0xF655 = Jumping
+//          0xDD58 = Landing/Exit Tornado
+//          0xD55A = Bubble Spell
+//          0x015C = Stomp Spell
+//          0x425E = Using Magic
+//          0x5D = Using Magic Attack
+//          0x63 = Level Intro Screen
+//          0x356B = Tornado Spell
+//          0x056F = Taking Damage
+//          0x8872 = Losing a Life
+function SabrinaState() => word_be(0x01101B)
+
+// $01102F: [16-bit BE] Sabrina Sprite Index
+//          Unique identifier for the sprite being displayed
+function SabrinaSpriteIndex() => word_be(0x01102F)
+
+// $012000: [8-bit] Entity Clear Bit Address Space Marker
+//          This address marks the start of an area in memory that tracks if an entity should spawn into the level when the player enters the area of the level where the entity is placed. Each entity address space will have an 8-bit value stored that when added to this address as an offset points to where that entity clear bit is loacated in memory.
+//          
+//          0x00 = Entity should spawn
+//          0x01 = Entity should not spawn
+//          
+//          The bit will be flipped to 0x01 when the player enters the area of the level that causes the entity to spawn in. If the player leaves the area that the entity is loaded into, the bit will flip back to 0x00 when the entity de-spawns. If the player interacted with the entity such that it was removed from the level, the bit will stay flipped to 0x01 when the player leaves the area that the entity was placed in. This is how the game remembers to not spawn the entity back in if the player returns to that area again.
+function EntityClearBitAddressSpaceMarker() => byte(0x012000)
+
+// ---------------------------
+// -------- Constants --------
+// ---------------------------
+
+ENTITY_STATE_OFFSET = 0x1B
+
+LEVEL_ID_W1L1 = 0x01
+LEVEL_ID_W1L2 = 0x02
+LEVEL_ID_W1L3 = 0x03
+LEVEL_ID_W1L4 = 0x04
+LEVEL_ID_W2L1 = 0x05
+LEVEL_ID_W2L2 = 0x06
+LEVEL_ID_W2L3 = 0x07
+LEVEL_ID_W2L4 = 0x08
+LEVEL_ID_W3L1 = 0x09
+LEVEL_ID_W3L2 = 0x0A
+LEVEL_ID_W3L3 = 0x0B
+LEVEL_ID_W3L4 = 0x0C
+LEVEL_ID_W4L1 = 0x0D
+LEVEL_ID_W4L2 = 0x0E
+LEVEL_ID_W4L3 = 0x0F
+LEVEL_ID_W4L4 = 0x10
+LEVEL_ID_DEBUG = 0x15
+LEVEL_ID_W1BOSS = 0x19
+LEVEL_ID_W2BOSS = 0x1A
+LEVEL_ID_W3BOSS = 0x1B
+LEVEL_ID_W4BOSS = 0x1C
+
+
+// ---------------------------
+// ----- Logic Functions -----
+// ---------------------------
+
+function LockIfUsedDebugMenuInThisSession() => unless(once(DebugMenuFlag() == 0x63))
+
+function InGame() => InGameFlag() == 0x01
+
+function SabrinaStateTransition(newState) => prev(SabrinaState()) != newState && SabrinaState() == newState
+
+function LevelTransitionOnThisFrame(beforeLevel, afterLevel) => prev(LevelId()) == beforeLevel && LevelId() == afterLevel
+
+function EnterExitPortalOnThisFrame() => SabrinaStateTransition(0x0A00C)
+
+function ClearLevelOnThisFrame(levelId) =>
+    LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
+    trigger_when(EnterExitPortalOnThisFrame())
+
+
+// ---------------------------
+// ------ Achievements -------
+// ---------------------------
+
+achievement(
+    title = "1-1 no enemies", points = 1,
+    description = "Clear Level 1-1 without defeating any of the enemies",
+    trigger = LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == 0x01 &&
+              trigger_when(EnterExitPortalOnThisFrame())
+)
+
+
+// -------------------------
+// ----- Rich Presence -----
+// -------------------------
+
+CharacterLookup = {
+    0x00: "Sabrina",
+    0x01: "Salem"
+}
+
+LevelLookup = {
+    LEVEL_ID_W1L1: "in Level 1-1",
+    LEVEL_ID_W1L2: "in Level 1-2",
+    LEVEL_ID_W1L3: "in Level 1-3",
+    LEVEL_ID_W1L4: "in Level 1-4",
+    LEVEL_ID_W2L1: "in Level 2-1",
+    LEVEL_ID_W2L2: "in Level 2-2",
+    LEVEL_ID_W2L3: "in Level 2-3",
+    LEVEL_ID_W2L4: "in Level 2-4",
+    LEVEL_ID_W3L1: "in Level 3-1",
+    LEVEL_ID_W3L2: "in Level 3-2",
+    LEVEL_ID_W3L3: "in Level 3-3",
+    LEVEL_ID_W3L4: "in Level 3-4",
+    LEVEL_ID_W4L1: "in Level 4-1",
+    LEVEL_ID_W4L2: "in Level 4-2",
+    LEVEL_ID_W4L3: "in Level 4-3",
+    LEVEL_ID_W4L4: "in Level 4-4",
+    LEVEL_ID_W1BOSS: "fighting the Spookie Trap in Candy Craze",
+    LEVEL_ID_W2BOSS: "fighting the Spookie Trap in Float Zone",
+    LEVEL_ID_W3BOSS: "fighting the Spookie Trap in Jewel Cave",
+    LEVEL_ID_W4BOSS: "fighting Spookie in Nite Lite Land",
+    LEVEL_ID_DEBUG: "messing around in the debug level"
+}
+
+HeartLookup = {
+    0x00: "---",
+    0x01: "♥--",
+    0x02: "♥♥-",
+    0x03: "♥♥♥"
+}
+
+StarLookup = {
+    0x00: "---",
+    0x01: "★--",
+    0x02: "★★-",
+    0x03: "★★★"
+}
+
+CrystalLookup = {
+    0x00: "---",
+    0x01: "◆--",
+    0x02: "◆◆-",
+    0x03: "◆◆◆"
+}
+
+rich_presence_conditional_display(InGameFlag() != 0x01, "In Menus")
+rich_presence_conditional_display(LevelId() == LEVEL_ID_W1BOSS || LevelId() == LEVEL_ID_W2BOSS || LevelId() == LEVEL_ID_W3BOSS || LevelId() == LEVEL_ID_W4BOSS, "{0} is {1} | {2}",
+    rich_presence_lookup("Character", CharacterControlFlag(), CharacterLookup, fallback="???"),
+    rich_presence_lookup("Level", LevelId(), LevelLookup, fallback="lost in the underworld's hall of doors"),
+    rich_presence_lookup("Hearts", NumberOfHearts(), HeartLookup, fallback="♥♥♥")
+)
+rich_presence_display("{0} is {1} | {2} | {3} | {4}",
+    rich_presence_lookup("Character", CharacterControlFlag(), CharacterLookup, fallback="???"),
+    rich_presence_lookup("Level", LevelId(), LevelLookup, fallback="lost in the underworld's hall of doors"),
+    rich_presence_lookup("Hearts", NumberOfHearts(), HeartLookup, fallback="♥♥♥"),
+    rich_presence_lookup("Stars", CurrentPowerStarCount(), StarLookup, fallback="---"),
+    rich_presence_lookup("Crystals", CurrentCrystalCount(), CrystalLookup, fallback="---")
+)
