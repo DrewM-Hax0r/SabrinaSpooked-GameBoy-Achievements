@@ -44,7 +44,8 @@ function CurrentPowerStarCount() => byte(0x00CA71)
 function CharacterControlFlag() => byte(0x00CAA3)
 
 // $00CAF1: [8-bit] Level ID
-//          Keeps track of which level us currently loaded. The game uses this value to determine which level to load next when certain events happen that cause a level load to occur. The value will increment to the next level when the password screen is shown, displaying the password for the next level.
+//          Keeps track of which level is currently loaded. The game uses this value to determine which level to load next when certain events happen that cause a level load to occur.
+//          The value will increment to the next level when the password screen is shown, displaying the password for the next level.
 //          
 //          0x00 = Title Screens, Debug Menu, etc.
 //          0x01 = Opening Cutscene / Level 1-1
@@ -93,7 +94,8 @@ function BubbleSpellCollectedFlag() => byte(0x00CB06)
 // $011000: [8-bit] Entity 1 Active Status
 //          This first entity is always Sabrina.
 //          
-//          This address is the start of the entity address space. Starting from here, adding 0x7B to this address will bring you to the start of the next entity address space. Continuously adding 0x7B will bring you to the start of each available entity address space.
+//          This address is the start of the entity address space. Starting from here, adding 0x7B to this address will bring you to the start of the next entity address space.
+//          Continuously adding 0x7B will bring you to the start of each available entity address space.
 //          
 //          The following offsets correspond to various properties for the entity when applied to the active status address:
 //          +0x1B = Entity State (16-bit BE)
@@ -132,6 +134,20 @@ function SabrinaState() => word_be(0x01101B)
 //          Unique identifier for the sprite being displayed
 function SabrinaSpriteIndex() => word_be(0x01102F)
 
+// $011267: [8-bit] Entity 1 Active Status
+//
+//          0x00 = Active Entity
+//          0xFF = Inactive Entity
+//
+//          This address is the start of the entity address space. Starting from here, adding 0x7B to this address will bring you to the start of the next entity address space.
+//          Continuously adding 0x7B will bring you to the start of each available entity address space.
+//
+//          The following offsets correspond to various properties for the entity when applied to the active status address:
+//          +0x1B = Entity State (16-bit BE)
+//          +0x21 = Present Box Contents (8-bit)
+//          +0x27 = Entity Clear Bit Offset (8-bit)
+function Entity1ActiveStatus() => byte(ENTITY_ADDRESS_SPACE)
+
 // $012000: [8-bit] Entity Clear Bit Address Space Marker
 //          This address marks the start of an area in memory that tracks if an entity should spawn into the level when the player enters the area of the level where the entity is placed. Each entity address space will have an 8-bit value stored that when added to this address as an offset points to where that entity clear bit is loacated in memory.
 //          
@@ -145,7 +161,23 @@ function EntityClearBitAddressSpaceMarker() => byte(0x012000)
 // -------- Constants --------
 // ---------------------------
 
-ENTITY_STATE_OFFSET = 0x1B
+ENTITY_ADDRESS_SPACE = 0x011267
+ENTITY_ADDRESS_SPACE_SIZE = 0x7B
+ENTITY_SLOTS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+
+ENTITY_OFFSET_STATE = 0x1B
+ENTITY_OFFSET_PRESENT_BOX_CONTENTS = 0x21
+ENTITY_OFFSET_CLEAR_BIT_OFFSET = 0x27
+
+ENTITY_CLEAR_BIT_ADDRESS_SPACE = 0x012000
+
+ENTITY_INACTIVE = 0xFF
+
+W1_ENEMY_STATES = [
+    0x1641, 0x7E42,        // Muffin Thrower
+    0x1046, 0xD346,        // Cupcake
+    0x2945, 0x8044, 0x8145 // Lips
+]
 
 LEVEL_ID_W1L1 = 0x01
 LEVEL_ID_W1L2 = 0x02
@@ -174,9 +206,21 @@ LEVEL_ID_W4BOSS = 0x1C
 // ----- Logic Functions -----
 // ---------------------------
 
+function InArray(value, array) {
+    result = false
+    for compare in array {
+        result = result || compare == value
+    }
+    return result
+}
+
 function LockIfUsedDebugMenuInThisSession() => unless(once(DebugMenuFlag() == 0x63))
 
 function InGame() => InGameFlag() == 0x01
+
+function StartedLevelOnThisFrame(levelId) => prev(InGameFlag()) == 0x00 && InGame() && LevelId() == levelId
+
+function ResetIfNotInLevel(levelId) => never(!InGame()) && never(LevelId() != levelId)
 
 function SabrinaStateTransition(newState) => prev(SabrinaState()) != newState && SabrinaState() == newState
 
@@ -187,6 +231,34 @@ function EnterExitPortalOnThisFrame() => SabrinaStateTransition(0x0A00C)
 function ClearLevelOnThisFrame(levelId) =>
     LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
     trigger_when(EnterExitPortalOnThisFrame())
+    
+function EntityAddress(slot) => ENTITY_ADDRESS_SPACE + (ENTITY_ADDRESS_SPACE_SIZE * slot)
+
+function EntityState(address) => word_be(address + ENTITY_OFFSET_STATE)
+
+function EntityClearBitOffset(address) => byte(address + ENTITY_OFFSET_CLEAR_BIT_OFFSET)
+
+function IsEntityActive(address) => byte(address) != ENTITY_INACTIVE
+
+function IsEntityAnEnemy(address) {
+    entityState = EntityState(address)
+    return InArray(entityState, W1_ENEMY_STATES)
+}
+
+function IsEnemyDefeatedOnThisFrame(address) {
+    entityState = byte(address)
+    entityClearBit = byte(ENTITY_CLEAR_BIT_ADDRESS_SPACE + EntityClearBitOffset(address))
+    return prev(entityState) != ENTITY_INACTIVE && entityState == ENTITY_INACTIVE && entityClearBit == 0x01
+}
+
+function ResetIfEnemyDefeatedOnThisFrame(levelId) {
+    result = ResetIfNotInLevel(levelId)
+    for slot in ENTITY_SLOTS {
+        address = EntityAddress(slot)
+        result = result && never(IsEntityAnEnemy(address) && IsEnemyDefeatedOnThisFrame(address))
+    }
+    return result
+}
 
 
 // ---------------------------
@@ -196,7 +268,8 @@ function ClearLevelOnThisFrame(levelId) =>
 achievement(
     title = "1-1 no enemies", points = 1,
     description = "Clear Level 1-1 without defeating any of the enemies",
-    trigger = LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == 0x01 &&
+    trigger = LockIfUsedDebugMenuInThisSession() &&
+              once(StartedLevelOnThisFrame(LEVEL_ID_W1L1)) && ResetIfEnemyDefeatedOnThisFrame(LEVEL_ID_W1L1) &&
               trigger_when(EnterExitPortalOnThisFrame())
 )
 
