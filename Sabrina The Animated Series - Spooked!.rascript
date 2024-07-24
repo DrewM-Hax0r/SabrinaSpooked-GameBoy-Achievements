@@ -91,6 +91,13 @@ function ShrinkSpellCollectedFlag() => byte(0x00CB05)
 //          0x80 = Spell aquired
 function BubbleSpellCollectedFlag() => byte(0x00CB06)
 
+// $00CB06: [8-bit] Game Paused Flag
+//          This value can identify when the player has paused the game.
+//
+//          0x00 = Game Not Paused
+//          0x01 = Game Paused
+function GamePausedFlag() => byte(0x00CB0C)
+
 // $011000: [8-bit] Entity 1 Active Status
 //          This first entity is always Sabrina.
 //          
@@ -133,6 +140,15 @@ function SabrinaState() => word_be(0x01101B)
 // $01102F: [16-bit BE] Sabrina Sprite Index
 //          Unique identifier for the sprite being displayed
 function SabrinaSpriteIndex() => word_be(0x01102F)
+
+// $01124F: [8-bit] Boss Health (Spookie Trap World 1)
+//          This value represents how many more times the boss must be damaged before it is defeated. This value is for the boss of World 1 only.
+//
+//          Max value of 0x06.
+//          Decreases by 1 each time the boss is damaged.
+//          A value of 0x00 does not indicate the boss is defeated.
+//          If the boss is damaged when this value is 0x00, it will change to 0xFF, indicating the boss is defeated.
+function World1BossHealth() => byte(0x01124F)
 
 // $011267: [8-bit] Entity 1 Active Status
 //
@@ -232,6 +248,10 @@ function ClearLevelOnThisFrame(levelId) =>
     LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
     trigger_when(EnterExitPortalOnThisFrame())
     
+function DefeatBossOnThisFrame(levelId, bossHealth) =>
+    LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
+    trigger_when(prev(bossHealth) == 0x00 && bossHealth == 0xFF)
+    
 function EntityAddress(slot) => ENTITY_ADDRESS_SPACE + (ENTITY_ADDRESS_SPACE_SIZE * slot)
 
 function EntityState(address) => word_be(address + ENTITY_OFFSET_STATE)
@@ -266,11 +286,70 @@ function ResetIfEnemyDefeatedOnThisFrame(levelId) {
 // ---------------------------
 
 achievement(
+    id = 450339, badge = "509542",
+    title = "Candy Craze Level 1 Clear", points = 1,
+    description = "Clear Level 1-1",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W1L1)
+)
+
+achievement(
+    id = 450340, badge = "509543",
+    title = "Candy Craze Level 2 Clear", points = 1,
+    description = "Clear Level 1-2",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W1L2)
+)
+
+achievement(
+    id = 450341, badge = "509544",
+    title = "Candy Craze Level 3 Clear", points = 1,
+    description = "Clear Level 1-3",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W1L3)
+)
+
+achievement(
+    id = 450343, badge = "509545",
+    title = "Candy Craze Level 4 Clear", points = 1,
+    description = "Clear Level 1-4",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W1L4)
+)
+
+achievement(
+    id = 450349, badge = "509547",
+    title = "Candy Craze Spookie Trap Clear", points = 2,
+    description = "Defeat the Spookie Trap at the end of World 1",
+    type = "progression",
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W1BOSS, World1BossHealth())
+)
+
+achievement(
     title = "1-1 no enemies", points = 1,
     description = "Clear Level 1-1 without defeating any of the enemies",
     trigger = LockIfUsedDebugMenuInThisSession() &&
               once(StartedLevelOnThisFrame(LEVEL_ID_W1L1)) && ResetIfEnemyDefeatedOnThisFrame(LEVEL_ID_W1L1) &&
               trigger_when(EnterExitPortalOnThisFrame())
+)
+
+
+// -------------------------
+// ----- Leaderboards ------
+// -------------------------
+
+function BossTimeTrialLeaderboardValue(levelId) => measured(tally(0, GamePausedFlag() != 0x01 && InGame() && LevelId() == levelId))
+
+leaderboard(
+    id=109670
+    title="Candy Craze Spookie Trap Time Trial",
+    description="Defeat the boss of World 1 as fast as possible",
+    start=LockIfUsedDebugMenuInThisSession() && StartedLevelOnThisFrame(LEVEL_ID_W1BOSS),
+    cancel=LevelId() != LEVEL_ID_W1BOSS || (prev(InGameFlag()) == 0x01 && InGameFlag() == 0x00),
+    submit=prev(World1BossHealth()) == 0x00 && World1BossHealth() == 0xFF,
+    value=BossTimeTrialLeaderboardValue(LEVEL_ID_W1BOSS),
+    format="FRAMES",
+    lower_is_better=true
 )
 
 
