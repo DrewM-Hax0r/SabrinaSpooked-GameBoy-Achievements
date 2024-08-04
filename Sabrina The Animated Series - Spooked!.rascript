@@ -141,14 +141,14 @@ function SabrinaState() => word_be(0x01101B)
 //          Unique identifier for the sprite being displayed
 function SabrinaSpriteIndex() => word_be(0x01102F)
 
-// $01124F: [8-bit] Boss Health (Spookie Trap World 1)
-//          This value represents how many more times the boss must be damaged before it is defeated. This value is for the boss of World 1 only.
+// $01124F: [8-bit] Boss Health
+//          This value represents how many more times the boss must be damaged before it is defeated.
 //
 //          Max value of 0x06.
 //          Decreases by 1 each time the boss is damaged.
 //          A value of 0x00 does not indicate the boss is defeated.
 //          If the boss is damaged when this value is 0x00, it will change to 0xFF, indicating the boss is defeated.
-function World1BossHealth() => byte(0x01124F)
+function BossHealth() => byte(0x01124F)
 
 // $011267: [8-bit] Entity 1 Active Status
 //
@@ -190,9 +190,10 @@ ENTITY_CLEAR_BIT_ADDRESS_SPACE = 0x012000
 ENTITY_INACTIVE = 0xFF
 
 W1_ENEMY_STATES = [
-    0x1641, 0x7E42,        // Muffin Thrower
-    0x1046, 0xD346,        // Cupcake
-    0x2945, 0x8044, 0x8145 // Lips
+    0x1641, 0x7E42,         // Muffin Thrower
+    0x1046, 0xD346,         // Cupcake
+    0x2945, 0x8044, 0x8145, // Lips
+    0x9549, 0x2E4A, 0x7F48  // Pogo
 ]
 
 LEVEL_ID_W1L1 = 0x01
@@ -322,7 +323,87 @@ achievement(
     title = "Candy Craze Spookie Trap Clear", points = 2,
     description = "Defeat the Spookie Trap at the end of World 1",
     type = "progression",
-    trigger = DefeatBossOnThisFrame(LEVEL_ID_W1BOSS, World1BossHealth())
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W1BOSS, BossHealth())
+)
+
+achievement(
+    id = 450432, badge = "509659",
+    title = "Float Zone Level 1 Clear", points = 2,
+    description = "Clear Level 2-1",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W2L1)
+)
+
+achievement(
+    id = 450433, badge = "509660",
+    title = "Float Zone Level 2 Clear", points = 2,
+    description = "Clear Level 2-2",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W2L2)
+)
+
+achievement(
+    id = 450434, badge = "509661",
+    title = "Float Zone Level 3 Clear", points = 2,
+    description = "Clear Level 2-3",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W2L3)
+)
+
+achievement(
+    id = 450435, badge = "509662",
+    title = "Float Zone Level 4 Clear", points = 2,
+    description = "Clear Level 2-4",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W2L4)
+)
+
+achievement(
+    id = 450436, badge = "509663",
+    title = "Float Zone Spookie Trap Clear", points = 3,
+    description = "Defeat the Spookie Trap at the end of World 2",
+    type = "progression",
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W2BOSS, BossHealth())
+)
+
+achievement(
+    id = 453098, badge = "512670",
+    title = "Jewel Cave Level 1 Clear", points = 3,
+    description = "Clear Level 3-1",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W3L1)
+)
+
+achievement(
+    id = 453099, badge = "512671",
+    title = "Jewel Cave Level 2 Clear", points = 3,
+    description = "Clear Level 3-2",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W3L2)
+)
+
+achievement(
+    id = 453100, badge = "512672",
+    title = "Jewel Cave Level 3 Clear", points = 3,
+    description = "Clear Level 3-3",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W3L3)
+)
+
+achievement(
+    id = 453101, badge = "512673",
+    title = "Jewel Cave Level 4 Clear", points = 3,
+    description = "Clear Level 3-4",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W3L4)
+)
+
+achievement(
+    id = 453102, badge = "512674",
+    title = "Jewel Cave Spookie Trap Clear", points = 4,
+    description = "Defeat the Spookie Trap at the end of World 3",
+    type = "progression",
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W3BOSS, BossHealth())
 )
 
 achievement(
@@ -341,12 +422,12 @@ achievement(
 function BossTimeTrialLeaderboardValue(levelId) => measured(tally(0, GamePausedFlag() != 0x01 && InGame() && LevelId() == levelId))
 
 leaderboard(
-    id=109670
+    id=109670,
     title="Candy Craze Spookie Trap Time Trial",
     description="Defeat the boss of World 1 as fast as possible",
     start=LockIfUsedDebugMenuInThisSession() && StartedLevelOnThisFrame(LEVEL_ID_W1BOSS),
     cancel=LevelId() != LEVEL_ID_W1BOSS || (prev(InGameFlag()) == 0x01 && InGameFlag() == 0x00),
-    submit=prev(World1BossHealth()) == 0x00 && World1BossHealth() == 0xFF,
+    submit=prev(BossHealth()) == 0x00 && BossHealth() == 0xFF,
     value=BossTimeTrialLeaderboardValue(LEVEL_ID_W1BOSS),
     format="FRAMES",
     lower_is_better=true
