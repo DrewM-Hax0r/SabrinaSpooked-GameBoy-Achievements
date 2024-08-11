@@ -142,9 +142,11 @@ function SabrinaState() => word_be(0x01101B)
 function SabrinaSpriteIndex() => word_be(0x01102F)
 
 // $01124F: [8-bit] Boss Health
-//          This value represents how many more times the boss must be damaged before it is defeated.
+//          This value represents how many more times the boss must be damaged before it is defeated. This address is used for every boss in the game.
 //
-//          Max value of 0x06.
+//          Max value of 0x06 for the bosses in worlds 1, 2, and 3.
+//          Max value of 0x07 for the boss in world 4
+//
 //          Decreases by 1 each time the boss is damaged.
 //          A value of 0x00 does not indicate the boss is defeated.
 //          If the boss is damaged when this value is 0x00, it will change to 0xFF, indicating the boss is defeated.
@@ -249,9 +251,9 @@ function ClearLevelOnThisFrame(levelId) =>
     LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
     trigger_when(EnterExitPortalOnThisFrame())
     
-function DefeatBossOnThisFrame(levelId, bossHealth) =>
+function DefeatBossOnThisFrame(levelId) =>
     LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
-    trigger_when(prev(bossHealth) == 0x00 && bossHealth == 0xFF)
+    trigger_when(prev(BossHealth()) == 0x00 && BossHealth() == 0xFF)
     
 function EntityAddress(slot) => ENTITY_ADDRESS_SPACE + (ENTITY_ADDRESS_SPACE_SIZE * slot)
 
@@ -323,7 +325,7 @@ achievement(
     title = "Candy Craze Spookie Trap Clear", points = 2,
     description = "Defeat the Spookie Trap at the end of World 1",
     type = "progression",
-    trigger = DefeatBossOnThisFrame(LEVEL_ID_W1BOSS, BossHealth())
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W1BOSS)
 )
 
 achievement(
@@ -363,7 +365,7 @@ achievement(
     title = "Float Zone Spookie Trap Clear", points = 3,
     description = "Defeat the Spookie Trap at the end of World 2",
     type = "progression",
-    trigger = DefeatBossOnThisFrame(LEVEL_ID_W2BOSS, BossHealth())
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W2BOSS)
 )
 
 achievement(
@@ -403,7 +405,47 @@ achievement(
     title = "Jewel Cave Spookie Trap Clear", points = 4,
     description = "Defeat the Spookie Trap at the end of World 3",
     type = "progression",
-    trigger = DefeatBossOnThisFrame(LEVEL_ID_W3BOSS, BossHealth())
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W3BOSS)
+)
+
+achievement(
+    id = 455083, badge = "514331",
+    title = "Nite Lite Land Level 1 Clear", points = 4,
+    description = "Clear Level 4-1",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W4L1)
+)
+
+achievement(
+    id = 455084, badge = "514332",
+    title = "Nite Lite Land Level 2 Clear", points = 4,
+    description = "Clear Level 4-2",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W4L2)
+)
+
+achievement(
+    id = 455089, badge = "514336",
+    title = "Nite Lite Land Level 3 Clear", points = 4,
+    description = "Clear Level 4-3",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W4L3)
+)
+
+achievement(
+    id = 455090, badge = "514346",
+    title = "Nite Lite Land Level 4 Clear", points = 4,
+    description = "Clear Level 4-4",
+    type = "progression",
+    trigger = ClearLevelOnThisFrame(LEVEL_ID_W4L4)
+)
+
+achievement(
+    id = 455091, badge = "514341",
+    title = "Never Touch The Spookie Jar", points = 25,
+    description = "Defeat Spookie in Nite Lite Land to save aunt Hilda and Zelda",
+    type = "win_condition",
+    trigger = DefeatBossOnThisFrame(LEVEL_ID_W4BOSS)
 )
 
 achievement(
@@ -429,6 +471,42 @@ leaderboard(
     cancel=LevelId() != LEVEL_ID_W1BOSS || (prev(InGameFlag()) == 0x01 && InGameFlag() == 0x00),
     submit=prev(BossHealth()) == 0x00 && BossHealth() == 0xFF,
     value=BossTimeTrialLeaderboardValue(LEVEL_ID_W1BOSS),
+    format="FRAMES",
+    lower_is_better=true
+)
+
+leaderboard(
+    id=112107,
+    title="Float Zone Spookie Trap Time Trial",
+    description="Defeat the boss of World 2 as fast as possible",
+    start=LockIfUsedDebugMenuInThisSession() && StartedLevelOnThisFrame(LEVEL_ID_W2BOSS),
+    cancel=LevelId() != LEVEL_ID_W2BOSS || (prev(InGameFlag()) == 0x01 && InGameFlag() == 0x00),
+    submit=prev(BossHealth()) == 0x00 && BossHealth() == 0xFF,
+    value=BossTimeTrialLeaderboardValue(LEVEL_ID_W2BOSS),
+    format="FRAMES",
+    lower_is_better=true
+)
+
+leaderboard(
+    id=112108,
+    title="Jewel Cave Spookie Trap Time Trial",
+    description="Defeat the boss of World 3 as fast as possible",
+    start=LockIfUsedDebugMenuInThisSession() && StartedLevelOnThisFrame(LEVEL_ID_W3BOSS),
+    cancel=LevelId() != LEVEL_ID_W3BOSS || (prev(InGameFlag()) == 0x01 && InGameFlag() == 0x00),
+    submit=prev(BossHealth()) == 0x00 && BossHealth() == 0xFF,
+    value=BossTimeTrialLeaderboardValue(LEVEL_ID_W3BOSS),
+    format="FRAMES",
+    lower_is_better=true
+)
+
+leaderboard(
+    id=112109,
+    title="Nite Lite Land Spookie Time Trial",
+    description="Defeat the boss of World 4 as fast as possible",
+    start=LockIfUsedDebugMenuInThisSession() && StartedLevelOnThisFrame(LEVEL_ID_W4BOSS),
+    cancel=LevelId() != LEVEL_ID_W4BOSS || (prev(InGameFlag()) == 0x01 && InGameFlag() == 0x00),
+    submit=prev(BossHealth()) == 0x00 && BossHealth() == 0xFF,
+    value=BossTimeTrialLeaderboardValue(LEVEL_ID_W4BOSS),
     format="FRAMES",
     lower_is_better=true
 )
