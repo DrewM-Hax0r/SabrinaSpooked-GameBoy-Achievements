@@ -114,28 +114,11 @@ function GamePausedFlag() => byte(0x00CB0C)
 //          +0x63 = Enemy HP (8-bit)
 function Entity1ActiveStatus() => byte(0x011000)
 
-// $01101B: [16-bit BE] Sabrina State
+// $011002: [16-bit] Sabrina State
 //          Changes value depending on what action Sabrina is currently taking.
 //          
-//          0xA00C = Entering Portal
-//          0x6B4B = Shink Spell Standing
-//          0xCC4D = Shink Spell Walking
-//          0xD74F = Shink Spell Jumping
-//          0xFF51 = Shink Spell Landing
-//          0x4F = Controlling Salem
-//          0x2950 = Standing Idle
-//          0xF552 = Walking/Running
-//          0xF655 = Jumping
-//          0xDD58 = Landing/Exit Tornado
-//          0xD55A = Bubble Spell
-//          0x015C = Stomp Spell
-//          0x425E = Using Magic
-//          0x5D = Using Magic Attack
-//          0x63 = Level Intro Screen
-//          0x356B = Tornado Spell
-//          0x056F = Taking Damage
-//          0x8872 = Losing a Life
-function SabrinaState() => word_be(0x01101B)
+//          0x6F91 = Begin Enter Portal
+function SabrinaState() => word(0x011002)
 
 // $01102F: [16-bit BE] Sabrina Sprite Index
 //          Unique identifier for the sprite being displayed
@@ -178,6 +161,8 @@ function EntityClearBitAddressSpaceMarker() => byte(0x012000)
 // ---------------------------
 // -------- Constants --------
 // ---------------------------
+
+SABRINA_STATE_BEGIN_ENTER_PORTAL = 0x6F91
 
 ENTITY_ADDRESS_SPACE = 0x011267
 ENTITY_ADDRESS_SPACE_SIZE = 0x7B
@@ -245,7 +230,7 @@ function SabrinaStateTransition(newState) => prev(SabrinaState()) != newState &&
 
 function LevelTransitionOnThisFrame(beforeLevel, afterLevel) => prev(LevelId()) == beforeLevel && LevelId() == afterLevel
 
-function EnterExitPortalOnThisFrame() => SabrinaStateTransition(0x0A00C)
+function EnterExitPortalOnThisFrame() => SabrinaStateTransition(SABRINA_STATE_BEGIN_ENTER_PORTAL)
 
 function ClearLevelOnThisFrame(levelId) =>
     LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
