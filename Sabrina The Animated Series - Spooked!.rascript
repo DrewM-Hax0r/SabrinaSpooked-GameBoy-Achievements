@@ -71,20 +71,20 @@ function CharacterControlFlag() => byte(0x00CAA3)
 //          0x1C = W4 Boss Fight
 function LevelId() => byte(0x00CAF1)
 
-// $00CB03: [8-bit] Stomp Spell Collected Flag
+// $00CB03: [8-bit] Crush Spell Collected Flag
 //          0x00 = Spell not aquired
 //          0x80 = Spell aquired
-function StompSpellCollectedFlag() => byte(0x00CB03)
+function CrushSpellCollectedFlag() => byte(0x00CB03)
 
-// $00CB04: [8-bit] Tornado Spell Collected Flag
+// $00CB04: [8-bit] Whirlwind Spell Collected Flag
 //          0x00 = Spell not aquired
 //          0x80 = Spell aquired
-function TornadoSpellCollectedFlag() => byte(0x00CB04)
+function WhirlwindSpellCollectedFlag() => byte(0x00CB04)
 
-// $00CB05: [8-bit] Shrink Spell Collected Flag
+// $00CB05: [8-bit] Tiny Spell Collected Flag
 //          0x00 = Spell not aquired
 //          0x80 = Spell aquired
-function ShrinkSpellCollectedFlag() => byte(0x00CB05)
+function TinySpellCollectedFlag() => byte(0x00CB05)
 
 // $00CB06: [8-bit] Bubble Spell Collected Flag
 //          0x00 = Spell not aquired
@@ -118,6 +118,10 @@ function Entity1ActiveStatus() => byte(0x011000)
 //          Changes value depending on what action Sabrina is currently taking.
 //          
 //          0x6F91 = Begin Enter Portal
+//          0x5BEC = Activated Crush Spell
+//          0x5AA8 = Activated Bubble Spell
+//          0x6B14 = Activated Whirlwind Spell
+//          0x4B3E = Activated Tiny Spell
 function SabrinaState() => word(0x011002)
 
 // $01102F: [16-bit BE] Sabrina Sprite Index
@@ -162,7 +166,11 @@ function EntityClearBitAddressSpaceMarker() => byte(0x012000)
 // -------- Constants --------
 // ---------------------------
 
-SABRINA_STATE_BEGIN_ENTER_PORTAL = 0x6F91
+SABRINA_STATE_ENTER_PORTAL = 0x6F91
+SABRINA_STATE_CRUSH_SPELL = 0x5BEC
+SABRINA_STATE_BUBBLE_SPELL = 0x5AA8
+SABRINA_STATE_WHIRLWIND_SPELL = 0x6B14
+SABRINA_STATE_TINY_SPELL = 0x4B3E
 
 ENTITY_ADDRESS_SPACE = 0x011267
 ENTITY_ADDRESS_SPACE_SIZE = 0x7B
@@ -175,6 +183,8 @@ ENTITY_OFFSET_CLEAR_BIT_OFFSET = 0x27
 ENTITY_CLEAR_BIT_ADDRESS_SPACE = 0x012000
 
 ENTITY_INACTIVE = 0xFF
+
+SPELL_COLLECTED = 0x80
 
 W1_ENEMY_STATES = [
     0x1641, 0x7E42,         // Muffin Thrower
@@ -230,7 +240,7 @@ function SabrinaStateTransition(newState) => prev(SabrinaState()) != newState &&
 
 function LevelTransitionOnThisFrame(beforeLevel, afterLevel) => prev(LevelId()) == beforeLevel && LevelId() == afterLevel
 
-function EnterExitPortalOnThisFrame() => SabrinaStateTransition(SABRINA_STATE_BEGIN_ENTER_PORTAL)
+function EnterExitPortalOnThisFrame() => SabrinaStateTransition(SABRINA_STATE_ENTER_PORTAL)
 
 function ClearLevelOnThisFrame(levelId) =>
     LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
@@ -431,6 +441,38 @@ achievement(
     description = "Defeat Spookie in Nite Lite Land to save aunt Hilda and Zelda",
     type = "win_condition",
     trigger = DefeatBossOnThisFrame(LEVEL_ID_W4BOSS)
+)
+
+achievement(
+    id = 455671, badge = "515170",
+    title = "Pesky Blocks Beneath My Feet, Turn to Dust as I Take a Seat!", points = 2,
+    description = "Activate the Crush Spell while playing as Sabrina",
+    trigger = LockIfUsedDebugMenuInThisSession() && InGame() &&
+              CrushSpellCollectedFlag() == SPELL_COLLECTED && SabrinaStateTransition(SABRINA_STATE_CRUSH_SPELL)
+)
+
+achievement(
+    id = 455674, badge = "515173",
+    title = "Going Up is Lots of Trouble, Chant This Spell, Become a Bubble!", points = 2,
+    description = "Activate the Bubble Spell while playing as Sabrina",
+    trigger = LockIfUsedDebugMenuInThisSession() && InGame() &&
+              BubbleSpellCollectedFlag() == SPELL_COLLECTED && SabrinaStateTransition(SABRINA_STATE_BUBBLE_SPELL)
+)
+
+achievement(
+    id = 455675, badge = "515174",
+    title = "Path is Blocked, Not For Long! Spin Around, Become Real Strong!", points = 2,
+    description = "Activate the Whirlwind Spell while playing as Sabrina",
+    trigger = LockIfUsedDebugMenuInThisSession() && InGame() &&
+              WhirlwindSpellCollectedFlag() == SPELL_COLLECTED && SabrinaStateTransition(SABRINA_STATE_WHIRLWIND_SPELL)
+)
+
+achievement(
+    id = 455677, badge = "515175",
+    title = "Tiny Passage Let Me Think, Chant This Spell, Then I'll Shrink!", points = 2,
+    description = "Activate the Tiny Spell while playing as Sabrina",
+    trigger = LockIfUsedDebugMenuInThisSession() && InGame() &&
+              TinySpellCollectedFlag() == SPELL_COLLECTED && SabrinaStateTransition(SABRINA_STATE_TINY_SPELL)
 )
 
 achievement(
