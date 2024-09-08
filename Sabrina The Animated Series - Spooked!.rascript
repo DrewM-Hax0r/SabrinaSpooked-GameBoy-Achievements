@@ -186,12 +186,45 @@ ENTITY_INACTIVE = 0xFF
 
 SPELL_COLLECTED = 0x80
 
+PRESENT_STATE_IDLE = 0xC040
+PRESENT_STATE_OPENING = 0xA00C
+
+PRESENT_BOX_ITEM_STATES = [
+    0x7749, // Power Star
+    0x264A, // Recovery Heart
+    0xF248, // 1UP
+    0x7946, // Crush Spell
+    0x1847, // Bubble Spell
+    0xB747, // Whirlwind Spell
+    0x5648  // Tiny Spell
+]
+
 W1_ENEMY_STATES = [
     0x1641, 0x7E42,         // Muffin Thrower
     0x1046, 0xD346,         // Cupcake
     0x2945, 0x8044, 0x8145, // Lips
     0x9549, 0x2E4A, 0x7F48  // Pogo
 ]
+
+W2_ENEMY_STATES = [
+    0xAC4B, 0x314C, 0xC44C, // Puffer Fish
+    0x1453, 0xC653, 0x9055, // Pirate Mermaid
+    0xA350, 0x8452, 0xBA52  // Baton Jumper
+]
+
+W3_ENEMY_STATES = [
+    0x2257, 0xCA58, 0xA259, 0xD859,         // Frog
+    0x5D63, 0x3463, 0xA661, 0x9962, 0x9363, // Ninja Beetle
+    0x9265, 0xFF65, 0x4D66, 0xB768, 0x1669  // Pig Witch
+]
+
+W4_ENEMY_STATES = [
+    0x9C6B, 0x816C, 0xF96C, 0x8D6E, 0xEC6E, // Knight
+    0x9960, 0x2460, 0x915F, 0x055F, 0x805E, // Wall Dragon
+    0x235D, 0x8C5D, 0xC25D                  // Flying Dragon
+]
+
+W4_LIGHTBULB_BUG_STATE = 0x5E5B
 
 LEVEL_ID_W1L1 = 0x01
 LEVEL_ID_W1L2 = 0x02
@@ -256,24 +289,70 @@ function EntityState(address) => word_be(address + ENTITY_OFFSET_STATE)
 
 function EntityClearBitOffset(address) => byte(address + ENTITY_OFFSET_CLEAR_BIT_OFFSET)
 
+function EntityClearBit(address) => byte(ENTITY_CLEAR_BIT_ADDRESS_SPACE + EntityClearBitOffset(address))
+
 function IsEntityActive(address) => byte(address) != ENTITY_INACTIVE
 
-function IsEntityAnEnemy(address) {
+function IsEntityAnEnemy(address, enemyStates) {
     entityState = EntityState(address)
-    return InArray(entityState, W1_ENEMY_STATES)
+    return InArray(entityState, enemyStates)
+}
+
+function PresentBoxOpenedOnThisFrame(address) {
+    entityState = EntityState(address)
+    return prev(entityState) == PRESENT_STATE_IDLE && entityState == PRESENT_STATE_OPENING
+}
+
+function PresentBoxReappearedOnThisFrame(address) {
+    result = false
+    entityState = EntityState(address)
+    entityClearBit = EntityClearBit(address)
+    for state in PRESENT_BOX_ITEM_STATES {
+        result = result || (entityState == state && prev(entityClearBit) == 0x01 && entityClearBit == 0x00)
+    }
+    return result
+}
+
+function PresentBoxesOpenedOnThisFrame() {
+    result = []
+    for slot in ENTITY_SLOTS {
+        address = EntityAddress(slot)
+        array_push(result, PresentBoxOpenedOnThisFrame(address))
+        array_push(result, deduct(PresentBoxReappearedOnThisFrame(address)))
+    }
+    return result
 }
 
 function IsEnemyDefeatedOnThisFrame(address) {
     entityState = byte(address)
-    entityClearBit = byte(ENTITY_CLEAR_BIT_ADDRESS_SPACE + EntityClearBitOffset(address))
+    entityClearBit = EntityClearBit(address)
     return prev(entityState) != ENTITY_INACTIVE && entityState == ENTITY_INACTIVE && entityClearBit == 0x01
 }
 
-function ResetIfEnemyDefeatedOnThisFrame(levelId) {
+function ResetIfEnemyDefeatedOnThisFrame(levelId, enemyStates) {
     result = ResetIfNotInLevel(levelId)
     for slot in ENTITY_SLOTS {
         address = EntityAddress(slot)
-        result = result && never(IsEntityAnEnemy(address) && IsEnemyDefeatedOnThisFrame(address))
+        result = result && never(IsEntityAnEnemy(address, enemyStates) && IsEnemyDefeatedOnThisFrame(address))
+    }
+    return result
+}
+
+function OpenedPresentBoxesInLevel(levelId, numberOfPresents) =>
+    LockIfUsedDebugMenuInThisSession() &&
+    never(InGameFlag() == 0x00) && never(LevelId() != levelId) &&
+    measured(tally(numberOfPresents, PresentBoxesOpenedOnThisFrame()), LevelId() == levelId)
+    
+function ClearLevelWithoutDefeatingEnemiesOnThisFrame(levelId, enemyStates) =>
+    LockIfUsedDebugMenuInThisSession() &&
+    once(StartedLevelOnThisFrame(levelId)) && ResetIfEnemyDefeatedOnThisFrame(levelId, enemyStates) &&
+    trigger_when(EnterExitPortalOnThisFrame())
+    
+function W4EnemyStatesPlusLightbulbBug() {
+    result = []
+    array_push(result, W4_LIGHTBULB_BUG_STATE)
+    for state in W4_ENEMY_STATES {
+        array_push(result, state)        
     }
     return result
 }
@@ -380,7 +459,7 @@ achievement(
 )
 
 achievement(
-    id = 453100, badge = "512672",
+    id = 453100, badge = "516670",
     title = "Jewel Cave Level 3 Clear", points = 3,
     description = "Clear Level 3-3",
     type = "progression",
@@ -460,7 +539,7 @@ achievement(
 )
 
 achievement(
-    id = 455675, badge = "515174",
+    id = 455675, badge = "522994",
     title = "Path is Blocked, Not For Long! Spin Around, Become Real Strong!", points = 2,
     description = "Activate the Whirlwind Spell while playing as Sabrina",
     trigger = LockIfUsedDebugMenuInThisSession() && InGame() &&
@@ -476,11 +555,227 @@ achievement(
 )
 
 achievement(
-    title = "1-1 no enemies", points = 1,
+    id = 456927, badge = "516644",
+    title = "Merry Witchmas I", points = 3,
+    description = "Open all present boxes in level 1-1",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W1L1, 5)
+)
+
+achievement(
+    id = 456928, badge = "516645",
+    title = "Merry Witchmas II", points = 3,
+    description = "Open all present boxes in level 1-2",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W1L2, 7)
+)
+
+achievement(
+    id = 456929, badge = "516646",
+    title = "Merry Witchmas III", points = 3,
+    description = "Open all present boxes in level 1-3",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W1L3, 8)
+)
+
+achievement(
+    id = 456930, badge = "516647",
+    title = "Merry Witchmas IV", points = 3,
+    description = "Open all present boxes in level 1-4",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W1L4, 9)
+)
+
+achievement(
+    id = 456931, badge = "516649",
+    title = "Merry Witchmas V", points = 3,
+    description = "Open all present boxes in level 2-1",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W2L1, 7)
+)
+
+achievement(
+    id = 456932, badge = "516650",
+    title = "Merry Witchmas VI", points = 3,
+    description = "Open all present boxes in level 2-2",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W2L2, 9)
+)
+
+achievement(
+    id = 456933, badge = "516651",
+    title = "Merry Witchmas VII", points = 3,
+    description = "Open all present boxes in level 2-3",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W2L3, 9)
+)
+
+achievement(
+    id = 456934, badge = "516652",
+    title = "Merry Witchmas VIII", points = 3,
+    description = "Open all present boxes in level 2-4",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W2L4, 10)
+)
+
+achievement(
+    id = 456935, badge = "516653",
+    title = "Merry Witchmas IX", points = 3,
+    description = "Open all present boxes in level 3-1",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W3L1, 6)
+)
+
+achievement(
+    id = 456936, badge = "516654",
+    title = "Merry Witchmas X", points = 3,
+    description = "Open all present boxes in level 3-2",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W3L2, 9)
+)
+
+achievement(
+    id = 456945, badge = "516663",
+    title = "Merry Witchmas XI", points = 3,
+    description = "Open all present boxes in level 3-3",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W3L3, 10)
+)
+
+achievement(
+    id = 456946, badge = "516665",
+    title = "Merry Witchmas XII", points = 3,
+    description = "Open all present boxes in level 3-4",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W3L4, 11)
+)
+
+achievement(
+    id = 456947, badge = "516666",
+    title = "Merry Witchmas XIII", points = 3,
+    description = "Open all present boxes in level 4-1",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W4L1, 9)
+)
+
+achievement(
+    id = 456948, badge = "516667",
+    title = "Merry Witchmas XIV", points = 3,
+    description = "Open all present boxes in level 4-2",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W4L2, 9)
+)
+
+achievement(
+    id = 456949, badge = "516668",
+    title = "Merry Witchmas XV", points = 3,
+    description = "Open all obtainable present boxes in level 4-3",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W4L3, 12)
+)
+
+achievement(
+    id = 456963, badge = "516669",
+    title = "Merry Witchmas XVI", points = 3,
+    description = "Open all present boxes in level 4-4",
+    trigger = OpenedPresentBoxesInLevel(LEVEL_ID_W4L4, 11)
+)
+
+achievement(
+    id = 459277, badge = "519971",
+    title = "Pacifist I", points = 3,
     description = "Clear Level 1-1 without defeating any of the enemies",
-    trigger = LockIfUsedDebugMenuInThisSession() &&
-              once(StartedLevelOnThisFrame(LEVEL_ID_W1L1)) && ResetIfEnemyDefeatedOnThisFrame(LEVEL_ID_W1L1) &&
-              trigger_when(EnterExitPortalOnThisFrame())
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L1, W1_ENEMY_STATES)
+)
+
+achievement(
+    id = 459278, badge = "519972",
+    title = "Pacifist II", points = 3,
+    description = "Clear Level 1-2 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L2, W1_ENEMY_STATES)
+)
+
+achievement(
+    id = 459279, badge = "519981",
+    title = "Pacifist III", points = 3,
+    description = "Clear Level 1-3 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L3, W1_ENEMY_STATES)
+)
+
+achievement(
+    id = 459280, badge = "519977",
+    title = "Pacifist IV", points = 3,
+    description = "Clear Level 1-4 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L4, W1_ENEMY_STATES)
+)
+
+achievement(
+    id = 461712, badge = "522979",
+    title = "Pacifist V", points = 3,
+    description = "Clear Level 2-1 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L1, W2_ENEMY_STATES)
+)
+
+achievement(
+    id = 461713, badge = "522975",
+    title = "Pacifist VI", points = 3,
+    description = "Clear Level 2-2 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L2, W2_ENEMY_STATES)
+)
+
+achievement(
+    id = 461714, badge = "522976",
+    title = "Pacifist VII", points = 3,
+    description = "Clear Level 2-3 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L3, W2_ENEMY_STATES)
+)
+
+achievement(
+    id = 461715, badge ="522977",
+    title = "Pacifist VIII", points = 3,
+    description = "Clear Level 2-4 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L4, W2_ENEMY_STATES)
+)
+
+achievement(
+    id = 461717, badge = "522980",
+    title = "Pacifist IX", points = 3,
+    description = "Clear Level 3-1 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L1, W3_ENEMY_STATES)
+)
+
+achievement(
+    id = 461718, badge = "522981",
+    title = "Pacifist X", points = 3,
+    description = "Clear Level 3-2 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L2, W3_ENEMY_STATES)
+)
+
+achievement(
+    id = 461720, badge = "522982",
+    title = "Pacifist XI", points = 3,
+    description = "Clear Level 3-3 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L3, W3_ENEMY_STATES)
+)
+
+achievement(
+    id = 461721, badge = "522983",
+    title = "Pacifist XII", points = 3,
+    description = "Clear Level 3-4 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L4, W3_ENEMY_STATES)
+)
+
+achievement(
+    id = 461728, badge = "522990",
+    title = "Pacifist XIII", points = 3,
+    description = "Clear Level 4-1 without defeating any of the enemies (including lightbulb bugs)",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L1, W4EnemyStatesPlusLightbulbBug())
+)
+
+achievement(
+    id = 461729, badge = "522991",
+    title = "Pacifist XIV", points = 3,
+    description = "Clear Level 4-2 without defeating any of the enemies (excluding lightbulb bugs)",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L2, W4_ENEMY_STATES)
+)
+
+achievement(
+    id = 461730, badge = "522992",
+    title = "Pacifist XV", points = 3,
+    description = "Clear Level 4-3 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L3, W4EnemyStatesPlusLightbulbBug())
+)
+
+achievement(
+    id = 461731, badge = "522993",
+    title = "Pacifist XVI", points = 3,
+    description = "Clear Level 4-4 without defeating any of the enemies",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L4, W4EnemyStatesPlusLightbulbBug())
 )
 
 
