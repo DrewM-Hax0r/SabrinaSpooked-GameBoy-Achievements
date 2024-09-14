@@ -172,6 +172,12 @@ SABRINA_STATE_BUBBLE_SPELL = 0x5AA8
 SABRINA_STATE_WHIRLWIND_SPELL = 0x6B14
 SABRINA_STATE_TINY_SPELL = 0x4B3E
 
+SABRINA_STATES_PIG = [
+    0x6671, 0x6677, 0x6665, 0x666B, // Idle
+    0x684C, 0x6852, 0x6858, 0x685E, // In Air
+    0x675F, 0x6765, 0x676B, 0x6759  // Walking
+]
+
 ENTITY_ADDRESS_SPACE = 0x011267
 ENTITY_ADDRESS_SPACE_SIZE = 0x7B
 ENTITY_SLOTS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
@@ -215,7 +221,11 @@ W2_ENEMY_STATES = [
 W3_ENEMY_STATES = [
     0x2257, 0xCA58, 0xA259, 0xD859,         // Frog
     0x5D63, 0x3463, 0xA661, 0x9962, 0x9363, // Ninja Beetle
-    0x9265, 0xFF65, 0x4D66, 0xB768, 0x1669  // Pig Witch
+    0x9265, 0xFF65, 0x4D66, 0xB768, 0x1669  // Pig Wizard
+]
+
+W3_PIG_WIZARD_STATES = [
+    0x9265, 0xFF65, 0x4D66, 0xB768, 0x1669
 ]
 
 W4_ENEMY_STATES = [
@@ -276,18 +286,24 @@ function LevelTransitionOnThisFrame(beforeLevel, afterLevel) => prev(LevelId()) 
 function EnterExitPortalOnThisFrame() => SabrinaStateTransition(SABRINA_STATE_ENTER_PORTAL)
 
 function ClearLevelOnThisFrame(levelId) =>
-    LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
-    trigger_when(EnterExitPortalOnThisFrame())
+    LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId && EnterExitPortalOnThisFrame()
     
 function DefeatBossOnThisFrame(levelId) =>
-    LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId &&
-    trigger_when(prev(BossHealth()) == 0x00 && BossHealth() == 0xFF)
+    LockIfUsedDebugMenuInThisSession() && InGame() && LevelId() == levelId && prev(BossHealth()) == 0x00 && BossHealth() == 0xFF
+    
+function IsSabrinaInPigForm() {
+    result = false
+    for state in SABRINA_STATES_PIG {
+        result = result || SabrinaState() == state
+    }
+    return result
+}
     
 function EntityAddress(slot) => ENTITY_ADDRESS_SPACE + (ENTITY_ADDRESS_SPACE_SIZE * slot)
 
 function EntityState(address) => word_be(address + ENTITY_OFFSET_STATE)
 
-function EntityClearBitOffset(address) => byte(address + ENTITY_OFFSET_CLEAR_BIT_OFFSET)
+function EntityClearBitOffset(address) => word(address + ENTITY_OFFSET_CLEAR_BIT_OFFSET) - 0xD000
 
 function EntityClearBit(address) => byte(ENTITY_CLEAR_BIT_ADDRESS_SPACE + EntityClearBitOffset(address))
 
@@ -327,6 +343,15 @@ function IsEnemyDefeatedOnThisFrame(address) {
     entityState = byte(address)
     entityClearBit = EntityClearBit(address)
     return prev(entityState) != ENTITY_INACTIVE && entityState == ENTITY_INACTIVE && entityClearBit == 0x01
+}
+
+function EnemyTypesDefeatedOnThisFrame(enemyStates) {
+    result = []
+    for slot in ENTITY_SLOTS {
+        address = EntityAddress(slot)
+        array_push(result, IsEntityAnEnemy(address, enemyStates) && IsEnemyDefeatedOnThisFrame(address))
+    }
+    return result
 }
 
 function ResetIfEnemyDefeatedOnThisFrame(levelId, enemyStates) {
@@ -776,6 +801,14 @@ achievement(
     title = "Pacifist XVI", points = 3,
     description = "Clear Level 4-4 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L4, W4EnemyStatesPlusLightbulbBug())
+)
+
+achievement(
+    id = 463530, badge = "525063",
+    title = "Hog Wild", points = 2,
+    description = "Defeat a wizard while Sabrina is in pig form",
+    trigger = LockIfUsedDebugMenuInThisSession() && InGameFlag() == 0x01 && IsSabrinaInPigForm() &&
+              trigger_when(tally(1, EnemyTypesDefeatedOnThisFrame(W3_PIG_WIZARD_STATES)))
 )
 
 
