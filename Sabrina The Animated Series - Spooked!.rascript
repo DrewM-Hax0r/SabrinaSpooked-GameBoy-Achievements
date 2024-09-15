@@ -882,8 +882,6 @@ achievement(
     trigger = MasterWorld(LEVEL_ID_W4L1, LEVEL_ID_W4BOSS)
 )
 
-// This achivement's logic cannot be fully represented using RA Script!
-// If the achievement is regenerated using this code, you must manually change the in game flag = 0 check and game over flag = 1 check to an OrNext/ResetNextIf that is directly above the state PauseIf group to a ResetNextIf condition.
 achievement(
     id = 463786, badge = "525297",
     title = "Crushed To Dust", points = 4,
@@ -893,8 +891,6 @@ achievement(
               measured(tally(5, EnemyTypesDefeatedOnThisFrame(AllEnemyStates())))
 )
 
-// This achivement's logic cannot be fully represented using RA Script!
-// If the achievement is regenerated using this code, you must manually change the in game flag = 0 check and game over flag = 1 check to an OrNext/ResetNextIf that is directly above the state PauseIf group to a ResetNextIf condition.
 achievement(
     id = 463787, badge = "525298",
     title = "Twister Blister", points = 4,
