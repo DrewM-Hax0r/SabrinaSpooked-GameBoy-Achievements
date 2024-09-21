@@ -117,7 +117,7 @@ function GamePausedFlag() => byte(0x00CB0C)
 //          +0x34 = X Position (16-bit)
 //          +0x37 = Y Position (16-bit)
 //          +0x63 = Enemy HP (8-bit)
-function Entity1ActiveStatus() => byte(0x011000)
+function SabrinaActiveStatus() => byte(0x011000)
 
 // $011002: [16-bit] Sabrina State
 //          Changes value depending on what action Sabrina is currently taking.
@@ -156,6 +156,7 @@ function BossHealth() => byte(0x01124F)
 //          Continuously adding 0x7B will bring you to the start of each available entity address space.
 //
 //          The following offsets correspond to various properties for the entity when applied to the active status address:
+//          +0x02 = Entity State (16-bit)
 //          +0x1B = Entity State (16-bit BE)
 //          +0x21 = Present Box Contents (8-bit)
 //          +0x27 = Entity Clear Bit Offset (8-bit)
@@ -193,6 +194,7 @@ ENTITY_ADDRESS_SPACE = 0x011267
 ENTITY_ADDRESS_SPACE_SIZE = 0x7B
 ENTITY_SLOTS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
 
+ENTITY_OFFSET_TYPE = 0x02
 ENTITY_OFFSET_STATE = 0x1B
 ENTITY_OFFSET_PRESENT_BOX_CONTENTS = 0x21
 ENTITY_OFFSET_CLEAR_BIT_OFFSET = 0x27
@@ -203,8 +205,8 @@ ENTITY_INACTIVE = 0xFF
 
 SPELL_COLLECTED = 0x80
 
-PRESENT_STATE_IDLE = 0xC040
-PRESENT_STATE_OPENING = 0xA00C
+PRESENT_TYPE_IDLE = 0x4010
+PRESENT_TYPE_OPENING = 0x4020
 PRESENT_STATE_OPENED_1UP = 0xF248
 
 PRESENT_BOX_ITEM_STATES = [
@@ -320,6 +322,8 @@ function IsSabrinaInPigForm() {
     
 function EntityAddress(slot) => ENTITY_ADDRESS_SPACE + (ENTITY_ADDRESS_SPACE_SIZE * slot)
 
+function EntityType(address) => word(address + ENTITY_OFFSET_TYPE)
+
 function EntityState(address) => word_be(address + ENTITY_OFFSET_STATE)
 
 function EntityClearBitOffset(address) => word(address + ENTITY_OFFSET_CLEAR_BIT_OFFSET) - 0xD000
@@ -334,8 +338,8 @@ function IsEntityAnEnemy(address, enemyStates) {
 }
 
 function PresentBoxOpenedOnThisFrame(address) {
-    entityState = EntityState(address)
-    return prev(entityState) == PRESENT_STATE_IDLE && entityState == PRESENT_STATE_OPENING
+    entityState = EntityType(address)
+    return prev(entityState) == PRESENT_TYPE_IDLE && entityState == PRESENT_TYPE_OPENING
 }
 
 function PresentBoxReappearedOnThisFrame(address) {
@@ -424,6 +428,10 @@ function MasterWorld(firstLevelId, bossLevelId) =>
     LockIfUsedDebugMenuInThisSession() && once(StartedLevelOnThisFrame(firstLevelId)) &&
     never(GameOver()) && never(prev(NumberOfLives()) > NumberOfLives()) &&
     trigger_when(LevelId() == bossLevelId && prev(BossHealth()) == 0x00 && BossHealth() == 0xFF)
+    
+function DefeatEnemiesInSabrinaStates(sabrinaStates, enemyStates, enemiesDefeated) => LockIfUsedDebugMenuInThisSession() && never(InGameFlag() == 0x00) && never(GameOver()) &&
+    disable_when(!InArray(SabrinaState(), sabrinaStates), until=(InGameFlag() == 0x00 || GameOverFlag() == 0x01 || InArray(SabrinaState(), sabrinaStates))) &&
+    measured(tally(enemiesDefeated, EnemyTypesDefeatedOnThisFrame(enemyStates)))
 
 
 // ---------------------------
@@ -821,8 +829,8 @@ achievement(
 achievement(
     id = 461728, badge = "522990",
     title = "Pacifist XIII", points = 5,
-    description = "Clear Level 4-1 without defeating any of the enemies (including lightbulb bugs)",
-    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L1, W4EnemyStatesPlusLightbulbBug())
+    description = "Clear Level 4-1 without defeating any of the enemies (excluding lightbulb bugs)",
+    trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L1, W4_ENEMY_STATES)
 )
 
 achievement(
@@ -886,18 +894,14 @@ achievement(
     id = 463786, badge = "525297",
     title = "Crushed To Dust", points = 4,
     description = "Defeat 5 enemies in a single level using the Crush Spell",
-    trigger = LockIfUsedDebugMenuInThisSession() && never(InGameFlag() == 0x00) && never(GameOver()) &&
-              disable_when(!InArray(SabrinaState(), SABRINA_STATES_CRUSH_SPELL), until=(InGameFlag() == 0x00 || GameOverFlag() == 0x01)) &&
-              measured(tally(5, EnemyTypesDefeatedOnThisFrame(AllEnemyStates())))
+    trigger = DefeatEnemiesInSabrinaStates(SABRINA_STATES_CRUSH_SPELL, AllEnemyStates(), 5)
 )
 
 achievement(
     id = 463787, badge = "525298",
     title = "Twister Blister", points = 4,
     description = "Defeat 5 enemies in a single level using the Whilwind Spell",
-    trigger = LockIfUsedDebugMenuInThisSession() && never(InGameFlag() == 0x00) && never(GameOver()) &&
-              disable_when(!InArray(SabrinaState(), SABRINA_STATES_WHIRLWIND_SPELL), until=(InGameFlag() == 0x00 || GameOverFlag() == 0x01)) &&
-              measured(tally(5, EnemyTypesDefeatedOnThisFrame(AllEnemyStates())))
+    trigger = DefeatEnemiesInSabrinaStates(SABRINA_STATES_WHIRLWIND_SPELL, AllEnemyStates(), 5)
 )
 
 achievement(
