@@ -363,9 +363,9 @@ function PresentBoxesOpenedOnThisFrame() {
 }
 
 function IsEnemyDefeatedOnThisFrame(address) {
-    entityState = byte(address)
+    entityActiveStatus = byte(address)
     entityClearBit = EntityClearBit(address)
-    return prev(entityState) != ENTITY_INACTIVE && entityState == ENTITY_INACTIVE && entityClearBit == 0x01
+    return prev(entityActiveStatus) != ENTITY_INACTIVE && entityActiveStatus == ENTITY_INACTIVE && entityClearBit == 0x01
 }
 
 function EnemyTypesDefeatedOnThisFrame(enemyStates) {
@@ -908,7 +908,8 @@ achievement(
     id = 463530, badge = "525063",
     title = "Hog Wild", points = 3,
     description = "Defeat a wizard while Sabrina is in pig form",
-    trigger = LockIfUsedDebugMenuInThisSession() && InGameFlag() == 0x01 && IsSabrinaInPigForm() &&
+    trigger = LockIfUsedDebugMenuInThisSession() && InGameFlag() == 0x01 &&
+              disable_when(!IsSabrinaInPigForm(), until=IsSabrinaInPigForm()) &&
               trigger_when(tally(1, EnemyTypesDefeatedOnThisFrame(W3_PIG_WIZARD_STATES)))
 )
 
