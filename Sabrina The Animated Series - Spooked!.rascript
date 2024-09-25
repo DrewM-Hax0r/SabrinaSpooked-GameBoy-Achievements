@@ -865,28 +865,28 @@ achievement(
 achievement(
     id = 463788, badge = "525299",
     title = "Candy Craze Master", points = 10,
-    description = "Clear all levels and defeat the boss in World 1 without losing a life",
+    description = "Start from Level 1-1 and clear all levels and defeat the boss in World 1 without ever losing a life",
     trigger = MasterWorld(LEVEL_ID_W1L1, LEVEL_ID_W1BOSS)
 )
 
 achievement(
     id = 463789, badge = "525300",
     title = "Float Zone Master", points = 10,
-    description = "Clear all levels and defeat the boss in World 2 without losing a life",
+    description = "Start from Level 2-1 and clear all levels and defeat the boss in World 2 without ever losing a life",
     trigger = MasterWorld(LEVEL_ID_W2L1, LEVEL_ID_W2BOSS)
 )
 
 achievement(
     id = 463790, badge = "525301",
     title = "Jewel Cave Master", points = 10,
-    description = "Clear all levels and defeat the boss in World 3 without losing a life",
+    description = "Start from Level 3-1 and clear all levels and defeat the boss in World 3 without ever losing a life",
     trigger = MasterWorld(LEVEL_ID_W3L1, LEVEL_ID_W3BOSS)
 )
 
 achievement(
     id = 463791, badge = "525302",
     title = "Nite Lite Land Master", points = 10,
-    description = "Clear all levels and defeat the boss in World 4 without losing a life",
+    description = "Start from Level 4-1 and clear all levels and defeat the boss in World 4 without ever losing a life",
     trigger = MasterWorld(LEVEL_ID_W4L1, LEVEL_ID_W4BOSS)
 )
 
