@@ -744,112 +744,112 @@ achievement(
 
 achievement(
     id = 459277, badge = "519971",
-    title = "Pacifist I", points = 5,
+    title = "Spooked! I", points = 5,
     description = "Clear Level 1-1 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L1, W1_ENEMY_STATES)
 )
 
 achievement(
     id = 459278, badge = "519972",
-    title = "Pacifist II", points = 5,
+    title = "Spooked! II", points = 5,
     description = "Clear Level 1-2 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L2, W1_ENEMY_STATES)
 )
 
 achievement(
     id = 459279, badge = "519981",
-    title = "Pacifist III", points = 5,
+    title = "Spooked! III", points = 5,
     description = "Clear Level 1-3 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L3, W1_ENEMY_STATES)
 )
 
 achievement(
     id = 459280, badge = "519977",
-    title = "Pacifist IV", points = 5,
+    title = "Spooked! IV", points = 5,
     description = "Clear Level 1-4 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W1L4, W1_ENEMY_STATES)
 )
 
 achievement(
     id = 461712, badge = "522979",
-    title = "Pacifist V", points = 5,
+    title = "Spooked! V", points = 5,
     description = "Clear Level 2-1 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L1, W2_ENEMY_STATES)
 )
 
 achievement(
     id = 461713, badge = "522975",
-    title = "Pacifist VI", points = 5,
+    title = "Spooked! VI", points = 5,
     description = "Clear Level 2-2 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L2, W2_ENEMY_STATES)
 )
 
 achievement(
     id = 461714, badge = "522976",
-    title = "Pacifist VII", points = 5,
+    title = "Spooked! VII", points = 5,
     description = "Clear Level 2-3 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L3, W2_ENEMY_STATES)
 )
 
 achievement(
     id = 461715, badge ="522977",
-    title = "Pacifist VIII", points = 5,
+    title = "Spooked! VIII", points = 5,
     description = "Clear Level 2-4 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W2L4, W2_ENEMY_STATES)
 )
 
 achievement(
     id = 461717, badge = "522980",
-    title = "Pacifist IX", points = 5,
+    title = "Spooked! IX", points = 5,
     description = "Clear Level 3-1 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L1, W3_ENEMY_STATES)
 )
 
 achievement(
     id = 461718, badge = "522981",
-    title = "Pacifist X", points = 5,
+    title = "Spooked! X", points = 5,
     description = "Clear Level 3-2 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L2, W3_ENEMY_STATES)
 )
 
 achievement(
     id = 461720, badge = "522982",
-    title = "Pacifist XI", points = 5,
+    title = "Spooked! XI", points = 5,
     description = "Clear Level 3-3 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L3, W3_ENEMY_STATES)
 )
 
 achievement(
     id = 461721, badge = "522983",
-    title = "Pacifist XII", points = 5,
+    title = "Spooked! XII", points = 5,
     description = "Clear Level 3-4 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W3L4, W3_ENEMY_STATES)
 )
 
 achievement(
     id = 461728, badge = "522990",
-    title = "Pacifist XIII", points = 5,
+    title = "Spooked! XIII", points = 5,
     description = "Clear Level 4-1 without defeating any of the enemies (excluding lightbulb bugs)",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L1, W4_ENEMY_STATES)
 )
 
 achievement(
     id = 461729, badge = "522991",
-    title = "Pacifist XIV", points = 5,
+    title = "Spooked! XIV", points = 5,
     description = "Clear Level 4-2 without defeating any of the enemies (excluding lightbulb bugs)",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L2, W4_ENEMY_STATES)
 )
 
 achievement(
     id = 461730, badge = "522992",
-    title = "Pacifist XV", points = 5,
+    title = "Spooked! XV", points = 5,
     description = "Clear Level 4-3 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L3, W4EnemyStatesPlusLightbulbBug())
 )
 
 achievement(
     id = 461731, badge = "522993",
-    title = "Pacifist XVI", points = 5,
+    title = "Spooked! XVI", points = 5,
     description = "Clear Level 4-4 without defeating any of the enemies",
     trigger = ClearLevelWithoutDefeatingEnemiesOnThisFrame(LEVEL_ID_W4L4, W4EnemyStatesPlusLightbulbBug())
 )
